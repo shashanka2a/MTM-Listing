@@ -132,7 +132,7 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                         idx === currentImageIndex
                           ? 'border-[#800000] ring-2 ring-[#800000]/20'
                           : 'border-gray-200 hover:border-gray-300'
