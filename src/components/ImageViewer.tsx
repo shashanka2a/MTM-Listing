@@ -24,6 +24,16 @@ const detections = [
 
 export function ImageViewer({ showDetections, onToggleDetections }: ImageViewerProps) {
   const [selectedImage, setSelectedImage] = useState(images[0]);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageChange = (image: typeof images[0]) => {
+    setSelectedImage(image);
+    setImageLoaded(false); // Reset when image changes
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
@@ -54,10 +64,11 @@ export function ImageViewer({ showDetections, onToggleDetections }: ImageViewerP
           src={selectedImage.url}
           alt={selectedImage.label}
           className="w-full h-full object-contain"
+          onLoad={handleImageLoad}
         />
         
-        {/* AI Detection Overlays */}
-        {showDetections && detections.map((detection) => (
+        {/* AI Detection Overlays - Only show after image loads */}
+        {showDetections && imageLoaded && detections.map((detection) => (
           <div
             key={detection.id}
             className="absolute"
@@ -87,7 +98,7 @@ export function ImageViewer({ showDetections, onToggleDetections }: ImageViewerP
         {images.map((image) => (
           <button
             key={image.id}
-            onClick={() => setSelectedImage(image)}
+            onClick={() => handleImageChange(image)}
             className={`relative flex-1 aspect-[4/3] rounded-md overflow-hidden border-2 transition-all ${
               selectedImage.id === image.id
                 ? 'border-[#8b4513] ring-2 ring-[#8b4513] ring-opacity-30'

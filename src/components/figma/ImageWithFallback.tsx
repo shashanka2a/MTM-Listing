@@ -14,6 +14,7 @@ interface ImageWithFallbackProps {
   width?: number;
   height?: number;
   fill?: boolean;
+  onLoad?: () => void;
   [key: string]: any;
 }
 
@@ -24,7 +25,7 @@ export function ImageWithFallback(props: ImageWithFallbackProps) {
     setDidError(true);
   };
 
-  const { src, alt, style, className, fill, width, height, ...rest } = props;
+  const { src, alt, style, className, fill, width, height, onLoad, ...rest } = props;
 
   if (!src || didError) {
     return (
@@ -55,6 +56,7 @@ export function ImageWithFallback(props: ImageWithFallbackProps) {
         className={className}
         style={style}
         onError={handleError}
+        onLoad={onLoad}
         {...rest}
       />
     );
@@ -69,6 +71,7 @@ export function ImageWithFallback(props: ImageWithFallbackProps) {
       className={className}
       style={style}
       onError={handleError}
+      onLoad={onLoad}
       {...rest}
     />
   );
