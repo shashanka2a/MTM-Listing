@@ -1,14 +1,17 @@
 'use client';
 
-import { RoleProvider } from '@/contexts/RoleContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ListingProvider } from '@/contexts/ListingContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <RoleProvider>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
-    </RoleProvider>
+    <AuthProvider>
+      <ListingProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </ListingProvider>
+    </AuthProvider>
   );
 }

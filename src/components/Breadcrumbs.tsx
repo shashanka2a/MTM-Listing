@@ -1,8 +1,12 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
 
 export interface BreadcrumbItem {
   label: string;
+  href?: string;
   onClick?: () => void;
   active?: boolean;
   disabled?: boolean;
@@ -11,28 +15,36 @@ export interface BreadcrumbItem {
 interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   showHome?: boolean;
+  homeHref?: string;
 }
 
-export function Breadcrumbs({ items, showHome = true }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, showHome = true, homeHref = '/' }: BreadcrumbsProps) {
   return (
     <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
       {showHome && (
         <>
-          <button
-            onClick={() => items[0]?.onClick?.()}
+          <Link
+            href={homeHref}
             className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
             aria-label="Go to home"
           >
             <Home className="w-4 h-4" />
             <span className="hidden sm:inline">Home</span>
-          </button>
+          </Link>
           {items.length > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
         </>
       )}
       
       {items.map((item, index) => (
         <React.Fragment key={index}>
-          {item.onClick && !item.disabled ? (
+          {item.href && !item.disabled && !item.active ? (
+            <Link
+              href={item.href}
+              className="font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {item.label}
+            </Link>
+          ) : item.onClick && !item.disabled ? (
             <button
               onClick={item.onClick}
               className={`font-medium transition-colors ${

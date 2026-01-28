@@ -1,31 +1,54 @@
-import React from 'react';
-import { Wand2 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Wand2, Sparkles } from 'lucide-react';
+
+interface TemplatePart {
+  key: string;
+  label: string;
+  value: string;
+}
 
 interface TitleGeneratorProps {
   title: string;
   onTitleChange: (title: string) => void;
+  templateParts?: TemplatePart[];
+  onRegenerate?: () => void;
+  isAiGenerated?: boolean;
 }
 
-const templateParts = [
-  { key: 'scale', label: 'Scale', value: 'HO' },
-  { key: 'brand', label: 'Brand', value: 'Bowser' },
-  { key: 'line', label: 'Line', value: 'Executive' },
-  { key: 'number', label: 'Number', value: '24688' },
-  { key: 'road', label: 'Road', value: 'PRR' },
-  { key: 'model', label: 'Model', value: 'ALCO RS-3 Ph. III' },
-  { key: 'type', label: 'Type', value: 'Diesel' },
-  { key: 'roadNumber', label: 'Road #', value: '#8595' },
-  { key: 'features', label: 'Features', value: 'w/ DCC & Sound' },
+const defaultTemplateParts: TemplatePart[] = [
+  { key: 'scale', label: 'Scale', value: '' },
+  { key: 'brand', label: 'Brand', value: '' },
+  { key: 'road', label: 'Road', value: '' },
+  { key: 'type', label: 'Type', value: '' },
+  { key: 'roadNumber', label: 'Road #', value: '' },
+  { key: 'features', label: 'Features', value: '' },
 ];
 
-export function TitleGenerator({ title, onTitleChange }: TitleGeneratorProps) {
+export function TitleGenerator({ title, onTitleChange, templateParts, onRegenerate, isAiGenerated }: TitleGeneratorProps) {
+  // Filter out empty template parts
+  const displayParts = useMemo(() => {
+    const parts = templateParts || defaultTemplateParts;
+    return parts.filter(part => part.value && part.value.trim() !== '');
+  }, [templateParts]);
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <label className="block text-sm font-semibold text-gray-900">
-          Title Generator
-        </label>
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#8b4513] bg-[#faf8f6] border border-[#8b4513] rounded-md hover:bg-[#f5f1ec]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <label className="block text-sm font-semibold text-gray-900">
+            Title Generator
+          </label>
+          {isAiGenerated && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+              <Sparkles className="w-3 h-3" />
+              AI Generated
+            </span>
+          )}
+        </div>
+        <button 
+          onClick={onRegenerate}
+          disabled={!onRegenerate}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#8b4513] bg-[#faf8f6] border border-[#8b4513] rounded-md hover:bg-[#f5f1ec] self-start sm:self-auto disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Wand2 className="w-4 h-4" />
           Regenerate
         </button>
@@ -34,24 +57,33 @@ export function TitleGenerator({ title, onTitleChange }: TitleGeneratorProps) {
       <textarea
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
-        rows={2}
-        className="w-full px-4 py-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#8b4513] focus:border-transparent resize-none"
+        rows={3}
+        placeholder="AI will generate a title based on your photos..."
+        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#8b4513] focus:border-transparent resize-none"
       />
 
-      <div className="mt-3">
-        <div className="text-xs font-medium text-gray-700 mb-2">Template Parts:</div>
-        <div className="flex flex-wrap gap-2">
-          {templateParts.map((part) => (
-            <div
-              key={part.key}
-              className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded text-xs"
-            >
-              <span className="text-gray-500">{part.label}:</span>
-              <span className="font-medium text-gray-900">{part.value}</span>
-            </div>
-          ))}
+      {displayParts.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-gray-700 mb-2">Detected from images:</div>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {displayParts.map((part) => (
+              <div
+                key={part.key}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-50 border border-purple-200 rounded text-[10px] sm:text-xs"
+              >
+                <span className="text-purple-600">{part.label}:</span>
+                <span className="font-medium text-purple-900">{part.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+      
+      {displayParts.length === 0 && !title && (
+        <div className="mt-3 text-xs text-gray-500">
+          Upload photos and run AI analysis to auto-generate title
+        </div>
+      )}
     </div>
   );
 }

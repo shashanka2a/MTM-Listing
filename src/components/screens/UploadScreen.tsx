@@ -1,22 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, Image, Camera, Wand2, ChevronRight, X, Trash2 } from 'lucide-react';
-import { RoleSwitcher } from '../RoleSwitcher';
+import Link from 'next/link';
+import { Upload, Image, Camera, Wand2, Trash2, Package, Home } from 'lucide-react';
 import { Breadcrumbs } from '../Breadcrumbs';
-import { LoadingButton } from '../LoadingButton';
 import { useToast } from '../../contexts/ToastContext';
+import { useListings } from '../../contexts/ListingContext';
+import { Loader2 } from 'lucide-react';
 
 interface UploadScreenProps {
   onComplete: () => void;
   onNavigate?: (step: 'upload' | 'review' | 'export') => void;
 }
 
-export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
-  const [uploading, setUploading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ id: string; url: string; name: string; size: number }>>([]);
+export function UploadScreen({ onComplete }: UploadScreenProps) {
   const [isDragging, setIsDragging] = useState(false);
   const toast = useToast();
+  const { uploadedImages, addImages, removeImage, clearImages, isUploading, analyzeImages, isAnalyzing } = useListings();
 
   const validateFile = (file: File): string | null => {
     const maxSize = 50 * 1024 * 1024; // 50MB
@@ -36,8 +36,8 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
     processFiles(files);
   };
 
-  const processFiles = (files: File[]) => {
-    const validFiles: Array<{ id: string; url: string; name: string; size: number }> = [];
+  const processFiles = async (files: File[]) => {
+    const validFiles: File[] = [];
     const errors: string[] = [];
 
     files.forEach(file => {
@@ -45,18 +45,12 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
       if (error) {
         errors.push(error);
       } else {
-        validFiles.push({
-          id: `${Date.now()}-${Math.random()}`,
-          url: URL.createObjectURL(file),
-          name: file.name,
-          size: file.size
-        });
+        validFiles.push(file);
       }
     });
 
     if (validFiles.length > 0) {
-      setUploadedFiles(prev => [...prev, ...validFiles]);
-      // Removed toast - visual feedback is enough
+      await addImages(validFiles);
     }
 
     if (errors.length > 0) {
@@ -80,35 +74,33 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
     setIsDragging(false);
   };
 
-  const removeFile = (id: string) => {
-    setUploadedFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) URL.revokeObjectURL(file.url);
-      return prev.filter(f => f.id !== id);
-    });
-    // Removed toast - visual feedback is enough
-  };
-
-  const handleProcess = () => {
-    if (uploadedFiles.length === 0) {
+  const handleProcess = async () => {
+    if (uploadedImages.length === 0) {
       toast.warning('No photos uploaded', 'Please upload at least one photo');
       return;
     }
 
-    setUploading(true);
-    // Removed toast - loading state shows processing
+    // Get image URLs for AI analysis
+    const imageUrls = uploadedImages.map(img => img.url);
     
-    // Simulate AI processing
-    setTimeout(() => {
-      // Removed toast - navigation is enough feedback
-      onComplete();
-    }, 2000);
+    toast.info('Analyzing...', 'AI is examining your photos');
+    
+    // Analyze images with Gemini AI
+    const analysis = await analyzeImages(imageUrls);
+    
+    if (analysis) {
+      toast.success('Analysis complete', `Detected: ${analysis.brand || 'Unknown'} ${analysis.scale || ''} ${analysis.locomotiveType || 'item'}`);
+    } else {
+      toast.warning('Analysis limited', 'Could not fully analyze images, please fill in details manually');
+    }
+    
+    onComplete();
   };
 
   const breadcrumbItems = [
-    { label: 'Upload', active: true },
-    { label: 'Review', disabled: true },
-    { label: 'Export', disabled: true }
+    { label: 'Upload', href: '/upload', active: true },
+    { label: 'Review', href: '/review', disabled: true },
+    { label: 'Export', href: '/export', disabled: true }
   ];
 
   return (
@@ -117,8 +109,21 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-3">
-            <Breadcrumbs items={breadcrumbItems} showHome={true} />
-            <RoleSwitcher />
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#800000] rounded-lg flex items-center justify-center">
+                  <Package className="w-4 h-4 text-white" />
+                </div>
+              </Link>
+              <Breadcrumbs items={breadcrumbItems} showHome={true} />
+            </div>
+            <Link 
+              href="/"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Link>
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
             Upload Product Photos
@@ -186,35 +191,60 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
             </div>
           </div>
 
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6 text-center">
+              <Loader2 className="w-8 h-8 text-[#800000] animate-spin mx-auto mb-3" />
+              <p className="text-gray-900 font-medium">Uploading to cloud...</p>
+              <p className="text-gray-500 text-sm mt-1">Images are being optimized and stored securely</p>
+            </div>
+          )}
+
           {/* Uploaded Files Preview */}
-          {uploadedFiles.length > 0 && (
+          {uploadedImages.length > 0 && !isUploading && (
             <div className="mt-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Uploaded Photos ({uploadedFiles.length})
-                </h3>
-                <button
-                  onClick={handleProcess}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#800000] text-white rounded-md hover:bg-[#660000] font-medium cursor-pointer transition-colors focus:ring-2 focus:ring-[#800000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing with AI...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-5 h-5" />
-                      Process with AI
-                    </>
+                  Uploaded Photos ({uploadedImages.length})
+                  {uploadedImages.some(img => img.publicId) && (
+                    <span className="ml-2 text-xs font-normal text-green-600 bg-green-50 px-2 py-1 rounded">
+                      ☁️ Cloud stored
+                    </span>
                   )}
-                </button>
+                </h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={clearImages}
+                    disabled={isUploading}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear All
+                  </button>
+                  <button
+                    onClick={handleProcess}
+                    disabled={isAnalyzing || isUploading}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#800000] text-white rounded-md hover:bg-[#660000] font-medium cursor-pointer transition-colors focus:ring-2 focus:ring-[#800000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Analyzing with AI...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-5 h-5" />
+                        Process with AI
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+                {uploadedImages.map((file, index) => (
+                  <div key={file.id} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={file.url}
                       alt={`Upload ${index + 1}`}
@@ -225,7 +255,7 @@ export function UploadScreen({ onComplete, onNavigate }: UploadScreenProps) {
                         Photo {index + 1}
                       </div>
                       <button
-                        onClick={() => removeFile(file.id)}
+                        onClick={() => removeImage(file.id)}
                         className="absolute top-2 right-2 bg-gray-500 text-white rounded-full p-1 hover:bg-gray-600 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />

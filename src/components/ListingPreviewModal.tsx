@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
-import { X, Package, Database, Ruler, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ListingPreviewModalProps {
   listing: any;
@@ -10,27 +9,27 @@ interface ListingPreviewModalProps {
   images?: string[];
 }
 
-// Comprehensive item specifics
+// Comprehensive item specifics (no hardcoded defaults – show only real data)
 const itemSpecifics = [
   { label: 'Brand', key: 'brand' },
-  { label: 'Line', key: 'line', defaultValue: 'Executive Line' },
+  { label: 'Line', key: 'line' },
   { label: 'Scale', key: 'scale' },
-  { label: 'Gauge', key: 'gauge', defaultValue: 'HO' },
-  { label: 'Road Name', key: 'roadName', defaultValue: 'Pennsylvania' },
-  { label: 'Road Number', key: 'roadNumber', defaultValue: '8595' },
-  { label: 'Locomotive Type', key: 'locomotiveType', defaultValue: 'ALCO RS-3' },
-  { label: 'Phase', key: 'phase', defaultValue: 'III' },
+  { label: 'Gauge', key: 'gauge' },
+  { label: 'Road Name', key: 'roadName' },
+  { label: 'Road Number', key: 'roadNumber' },
+  { label: 'Locomotive Type', key: 'locomotiveType' },
+  { label: 'Phase', key: 'phase' },
   { label: 'Control', key: 'dcc' },
-  { label: 'Decoder Brand', key: 'decoderBrand', defaultValue: 'ESU LokSound V5' },
-  { label: 'Coupler Type', key: 'couplerType', defaultValue: 'Knuckle' },
-  { label: 'Lighting', key: 'lighting', defaultValue: 'Directional' },
-  { label: 'Material', key: 'material', defaultValue: 'Plastic' },
-  { label: 'Paint', key: 'paint', defaultValue: 'Factory' },
-  { label: 'Packaging', key: 'packaging', defaultValue: 'Original Box' },
-  { label: 'Paperwork', key: 'paperwork', defaultValue: 'Included' },
-  { label: 'Wheel Wear', key: 'wheelWear', defaultValue: 'Minor' },
-  { label: 'Running Condition', key: 'runningCondition', defaultValue: 'Tested, Runs Well' },
-  { label: 'DCC Status', key: 'dccStatus', defaultValue: 'Dual Mode' },
+  { label: 'Decoder Brand', key: 'decoderBrand' },
+  { label: 'Coupler Type', key: 'couplerType' },
+  { label: 'Lighting', key: 'lighting' },
+  { label: 'Material', key: 'material' },
+  { label: 'Paint', key: 'paint' },
+  { label: 'Packaging', key: 'packaging' },
+  { label: 'Paperwork', key: 'paperwork' },
+  { label: 'Wheel Wear', key: 'wheelWear' },
+  { label: 'Running Condition', key: 'runningCondition' },
+  { label: 'DCC Status', key: 'dccStatus' },
 ];
 
 export function ListingPreviewModal({ listing, onClose, images }: ListingPreviewModalProps) {
@@ -95,11 +94,11 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
               
               {/* Main Image */}
               <div className="relative aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden border border-gray-200 mb-4">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={images[currentImageIndex]}
                   alt={`Product ${currentImageIndex + 1}`}
-                  fill
-                  className="object-contain"
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
                 
                 {/* Image Navigation */}
@@ -138,11 +137,11 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={img}
                         alt={`Thumbnail ${idx + 1}`}
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     </button>
                   ))}
@@ -188,7 +187,7 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
                 <div key={index} className="flex justify-between items-start py-2 border-b border-gray-100">
                   <span className="text-sm text-gray-600">{spec.label}</span>
                   <span className="text-sm font-medium text-gray-900 text-right ml-2">
-                    {listing[spec.key] || spec.defaultValue || '—'}
+                    {listing[spec.key] || '—'}
                   </span>
                 </div>
               ))}
@@ -201,46 +200,42 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="border border-gray-200 rounded-lg p-3">
                 <label className="block text-xs font-medium text-gray-500 mb-2">Length</label>
-                <p className="text-sm font-semibold text-gray-900 mb-2">
-                  {listing.length || '6.75'} <span className="text-xs font-normal text-gray-600">in</span>
+                <p className="text-sm font-semibold text-gray-900">
+                  {listing.length || '—'}{' '}
+                  {listing.length && (
+                    <span className="text-xs font-normal text-gray-600">in</span>
+                  )}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
-                  <Database className="w-3 h-3" />
-                  <span>Catalog</span>
-                </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-3">
                 <label className="block text-xs font-medium text-gray-500 mb-2">Width</label>
-                <p className="text-sm font-semibold text-gray-900 mb-2">
-                  {listing.width || '1.25'} <span className="text-xs font-normal text-gray-600">in</span>
+                <p className="text-sm font-semibold text-gray-900">
+                  {listing.width || '—'}{' '}
+                  {listing.width && (
+                    <span className="text-xs font-normal text-gray-600">in</span>
+                  )}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                  <Ruler className="w-3 h-3" />
-                  <span>Scale</span>
-                </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-3">
                 <label className="block text-xs font-medium text-gray-500 mb-2">Height</label>
-                <p className="text-sm font-semibold text-gray-900 mb-2">
-                  {listing.height || '1.75'} <span className="text-xs font-normal text-gray-600">in</span>
+                <p className="text-sm font-semibold text-gray-900">
+                  {listing.height || '—'}{' '}
+                  {listing.height && (
+                    <span className="text-xs font-normal text-gray-600">in</span>
+                  )}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                  <Ruler className="w-3 h-3" />
-                  <span>Scale</span>
-                </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg p-3">
                 <label className="block text-xs font-medium text-gray-500 mb-2">Weight</label>
-                <p className="text-sm font-semibold text-gray-900 mb-2">
-                  {listing.weight?.replace(' oz', '') || '8.5'} <span className="text-xs font-normal text-gray-600">oz</span>
+                <p className="text-sm font-semibold text-gray-900">
+                  {listing.weight?.replace(' oz', '') || '—'}{' '}
+                  {listing.weight && (
+                    <span className="text-xs font-normal text-gray-600">oz</span>
+                  )}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded">
-                  <Scale className="w-3 h-3" />
-                  <span>Estimated</span>
-                </div>
               </div>
             </div>
           </div>
@@ -249,9 +244,8 @@ export function ListingPreviewModal({ listing, onClose, images }: ListingPreview
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Description</h3>
             <div className="prose prose-sm max-w-none">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {listing.description || 
-                  'Bowser HO Scale Executive Line Pennsylvania Railroad (PRR) ALCO RS-3 Phase III diesel locomotive, road number 8595. Factory equipped with ESU LokSound V5 DCC decoder with premium sound. Features directional lighting, knuckle couplers, and fine detail. Tested and runs smoothly in both DC and DCC modes. Includes original packaging and documentation. Condition shows minor wheel wear consistent with light use. Paint is factory original with no touch-ups or modifications.'}
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {listing.description || 'No description provided yet.'}
               </p>
             </div>
           </div>
