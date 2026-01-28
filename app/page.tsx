@@ -181,11 +181,14 @@ export default function Home() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {quickStats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-shadow">
+                <div
+                  key={index}
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-10 h-10 bg-[#800000]/10 rounded-lg flex items-center justify-center">
                       <Icon className="w-5 h-5 text-[#800000]" />

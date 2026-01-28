@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronRight, Package, Home } from 'lucide-react';
+import Image from 'next/image';
+import { ChevronRight, Home } from 'lucide-react';
 
 interface HeaderProps {
   status: 'processing' | 'review' | 'approved' | 'pending' | 'exported';
@@ -28,8 +29,15 @@ export function Header({ status, confidenceScore }: HeaderProps) {
         <div className="flex items-center justify-between mb-2 sm:mb-3 gap-4">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#800000] rounded-lg flex items-center justify-center">
-                <Package className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#800000]/20 bg-[#800000]/5 flex items-center justify-center">
+                <Image
+                  src="/favicon.ico"
+                  alt="MTM Listings"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                  priority
+                />
               </div>
             </Link>
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 overflow-x-auto pb-1 flex-shrink min-w-0">
