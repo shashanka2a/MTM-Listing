@@ -154,6 +154,15 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
     
     // Ensure we have a valid SKU
     const skuToUse = dataToApprove.sku || generatedSku || generateSku();
+
+    // Derive running condition from numeric condition if not explicitly set:
+    // - If condition (1–10) is >= 6 → "Runs well"
+    // - Otherwise → "N/A"
+    let runningCondition = dataToApprove.runningCondition;
+    const numericCondition = Number(dataToApprove.condition);
+    if (!runningCondition && Number.isFinite(numericCondition)) {
+      runningCondition = numericCondition >= 6 ? 'Runs well' : 'N/A';
+    }
     
     setIsProcessing(true);
 
@@ -183,7 +192,7 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         packaging: dataToApprove.packaging,
         paperwork: dataToApprove.paperwork,
         wheelWear: dataToApprove.wheelWear,
-        runningCondition: dataToApprove.runningCondition,
+        runningCondition,
         dccStatus: dataToApprove.dccStatus,
         length: dataToApprove.length,
         width: dataToApprove.width,

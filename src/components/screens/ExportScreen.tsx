@@ -21,6 +21,34 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [previewListing, setPreviewListing] = useState<any>(null);
 
+  // Helper to compute SixBit condition code from listing or AI snapshot
+  const getConditionCode = (listing: any): string => {
+    const ai = listing.aiAnalysis || {};
+    const value =
+      typeof listing.condition === 'number' && !Number.isNaN(listing.condition)
+        ? listing.condition
+        : typeof ai.condition === 'number' && !Number.isNaN(ai.condition)
+          ? ai.condition
+          : null;
+    return value != null ? `C${value}` : '';
+  };
+
+  // Normalize listing data for preview/export using AI snapshot where needed
+  const enrichListing = (listing: any) => {
+    const ai = listing.aiAnalysis || {};
+    return {
+      ...listing,
+      title: listing.title || ai.title || '',
+      brand: listing.brand || ai.brand || '',
+      scale: listing.scale || ai.scale || '',
+      dcc: listing.dcc || ai.dcc || '',
+      roadName: listing.roadName || ai.roadName || '',
+      roadNumber: listing.roadNumber || ai.roadNumber || '',
+      locomotiveType: listing.locomotiveType || ai.locomotiveType || '',
+      description: listing.description || ai.description || '',
+    };
+  };
+
   // Get approved and exported listings
   const exportableListings = listings.filter(l => l.status === 'approved' || l.status === 'exported');
   
@@ -43,9 +71,6 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
     
     return matchesSearch;
   });
-
-  // Format condition for display
-  const formatCondition = (condition: number) => `C${condition}`;
 
   const toggleSelection = (id: string) => {
     setSelectedListings(prev => 
@@ -72,7 +97,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
     const formattedListings: ListingData[] = listingsToExport.map((l) => ({
       sku: l.sku,
       title: l.title || l.aiAnalysis?.title || '',
-      condition: formatCondition(l.condition),
+      condition: getConditionCode(l),
       brand: l.brand || l.aiAnalysis?.brand || '',
       scale: l.scale || l.aiAnalysis?.scale || '',
       dcc: l.dcc || l.aiAnalysis?.dcc || '',
@@ -102,7 +127,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
     const formattedListings: ListingData[] = listingsToExport.map((l) => ({
       sku: l.sku,
       title: l.title || l.aiAnalysis?.title || '',
-      condition: formatCondition(l.condition),
+      condition: getConditionCode(l),
       brand: l.brand || l.aiAnalysis?.brand || '',
       scale: l.scale || l.aiAnalysis?.scale || '',
       dcc: l.dcc || l.aiAnalysis?.dcc || '',
@@ -128,7 +153,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
     const formattedListings: ListingData[] = filteredListings.map((l) => ({
       sku: l.sku,
       title: l.title || l.aiAnalysis?.title || '',
-      condition: formatCondition(l.condition),
+      condition: getConditionCode(l),
       brand: l.brand || l.aiAnalysis?.brand || '',
       scale: l.scale || l.aiAnalysis?.scale || '',
       dcc: l.dcc || l.aiAnalysis?.dcc || '',
@@ -301,7 +326,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
                           </td>
                           <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-gray-900">
                             <button
-                              onClick={() => setPreviewListing(listing)}
+                              onClick={() => setPreviewListing(enrichListing(listing))}
                               className="text-[#800000] hover:text-[#600000] hover:underline font-semibold"
                             >
                               {listing.sku}
@@ -311,7 +336,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
                             {listing.title}
                           </td>
                           <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden lg:table-cell">
-                            {formatCondition(listing.condition)}
+                            {getConditionCode(listing) || '—'}
                           </td>
                           <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden lg:table-cell">
                             {listing.scale}
@@ -358,7 +383,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <button
-                              onClick={() => setPreviewListing(listing)}
+                              onClick={() => setPreviewListing(enrichListing(listing))}
                               className="text-sm font-mono font-semibold text-[#800000] hover:underline"
                             >
                               {listing.sku}
@@ -383,7 +408,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
                             {listing.title}
                           </p>
                           <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                            <span className="bg-gray-100 px-2 py-1 rounded">{formatCondition(listing.condition)}</span>
+                            <span className="bg-gray-100 px-2 py-1 rounded">{getConditionCode(listing) || '—'}</span>
                             <span className="bg-gray-100 px-2 py-1 rounded">{listing.scale}</span>
                             <span className="bg-gray-100 px-2 py-1 rounded">{listing.brand}</span>
                           </div>
@@ -537,7 +562,7 @@ export function ExportScreen({ onNewUpload }: ExportScreenProps) {
         <ListingPreviewModal
           listing={{
             ...previewListing,
-            condition: formatCondition(previewListing.condition)
+            condition: getConditionCode(previewListing) || previewListing.condition
           }}
           onClose={() => setPreviewListing(null)}
           images={previewListing.images?.map((img: any) => img.url) || []}
