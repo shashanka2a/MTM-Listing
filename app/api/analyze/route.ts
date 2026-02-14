@@ -37,7 +37,7 @@ PAPERWORK: Only set to false if no paperwork is visible in any image. If you see
 Return ONLY a valid JSON object (no markdown, no explanation) with these exact fields:
 
 {
-  "title": "Complete eBay title: [Scale] [Brand] [Product Line] [Road Name] [Type] #[Road Number] [Key Features]",
+  "title": "Format: [Gauge] SCALE [BRAND] [MODEL NUMBER] [RAILROAD] [EQUIPMENT TYPE] #[NUMBER]. Examples: N SCALE LIFE-LIKE 7843 ATSF SANTA FE GP38 DIESEL LOCOMOTIVE #3500. HO SCALE YESTERYEAR YYM4803WP-02 WP WESTERN PACIFIC FEATHER 40' BOX CAR #19503. Use gauge (N, HO, O, Z, S, G) + \" SCALE\", then brand, model number, railroad (e.g. WP WESTERN PACIFIC), equipment type (locomotive, box car, etc.), then # and road/car number.",
   "brand": "Exact manufacturer name (Athearn, Bachmann, Kato, Atlas, MTH, Lionel, Broadway Limited, ScaleTrains, Walthers, Proto 2000, American Flyer, etc.)",
   "line": "Product line if visible (Genesis, Executive, Trainman, Spectrum, etc.)",
   "scale": "Scale RATIO only — exactly one of: 1:220, 1:160, 1:87, 1:64, 1:48, 1:22.5 (for Z, N, HO, S, O, G respectively). Use the identification guide to identify the scale, then output the ratio here.",
@@ -74,7 +74,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with these exact f
 RULES:
 1. Identify scale using the guide: size vs real-world reference, track gauge (2 vs 3 rails, width), and visual cues. Prefer scale printed on box if visible. Then: scale = ratio (1:220, 1:160, 1:87, 1:64, 1:48, 1:22.5); gauge = letter (Z, N, HO, S, O, G).
 2. For condition: 10=Mint/Sealed, 9=Like New, 8=Excellent, 7=Very Good, 6=Good, 5=Fair, 4-1=Poor to Junk
-3. Always provide the title in proper eBay format with correct scale
+3. title: Use format [Gauge] SCALE [BRAND] [MODEL#] [RAILROAD] [EQUIPMENT TYPE] #[NUMBER]. Examples: \"N SCALE LIFE-LIKE 7843 ATSF SANTA FE GP38 DIESEL LOCOMOTIVE #3500\"; \"HO SCALE YESTERYEAR YYM4803WP-02 WP WESTERN PACIFIC FEATHER 40' BOX CAR #19503\". Equipment type can be locomotive, box car, caboose, etc.
 4. features array: 3-6 specific items; defects can be [] if none
 5. Use full road names in roadName, not just initials. Reporting marks (2–4 letter codes, e.g. BN, UP, BNSF) go with the railroad name; do not put them in roadNumber.
 6. roadNumber = digits only. If you see \"BN1574\" or \"UP 1234\" on the model, roadNumber is \"1574\" or \"1234\" respectively.

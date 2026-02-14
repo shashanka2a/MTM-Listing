@@ -107,6 +107,24 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
     setPan({ x: 0, y: 0 });
   }, []);
 
+  const currentIndex = displayImages.findIndex((img) => img.id === selectedImage.id);
+  const canGoPrev = displayImages.length > 1;
+  const canGoNext = displayImages.length > 1;
+  const goPrev = useCallback(() => {
+    if (!canGoPrev) return;
+    const prevIndex = currentIndex <= 0 ? displayImages.length - 1 : currentIndex - 1;
+    setSelectedImage(displayImages[prevIndex]);
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+  }, [canGoPrev, currentIndex, displayImages]);
+  const goNext = useCallback(() => {
+    if (!canGoNext) return;
+    const nextIndex = currentIndex >= displayImages.length - 1 ? 0 : currentIndex + 1;
+    setSelectedImage(displayImages[nextIndex]);
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+  }, [canGoNext, currentIndex, displayImages]);
+
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     if (e.deltaY < 0) zoomIn();
@@ -140,24 +158,6 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
     setSelectedImage(image);
     setImageLoaded(false); // Reset when image changes
   };
-
-  const currentIndex = displayImages.findIndex((img) => img.id === selectedImage.id);
-  const canGoPrev = displayImages.length > 1;
-  const canGoNext = displayImages.length > 1;
-  const goPrev = useCallback(() => {
-    if (!canGoPrev) return;
-    const prevIndex = currentIndex <= 0 ? displayImages.length - 1 : currentIndex - 1;
-    setSelectedImage(displayImages[prevIndex]);
-    setZoomLevel(1);
-    setPan({ x: 0, y: 0 });
-  }, [canGoPrev, currentIndex, displayImages]);
-  const goNext = useCallback(() => {
-    if (!canGoNext) return;
-    const nextIndex = currentIndex >= displayImages.length - 1 ? 0 : currentIndex + 1;
-    setSelectedImage(displayImages[nextIndex]);
-    setZoomLevel(1);
-    setPan({ x: 0, y: 0 });
-  }, [canGoNext, currentIndex, displayImages]);
 
   const handleMainImageKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
