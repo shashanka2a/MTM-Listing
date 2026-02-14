@@ -286,7 +286,6 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
                 alt={selectedImage.label}
                 className="max-w-none object-contain select-none"
                 style={{ maxHeight: 'calc(100vh - 6rem)' }}
-                draggable={false}
               />
             </div>
           </div>

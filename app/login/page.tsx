@@ -1,14 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Package, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function LoginPage() {
-  const router = useRouter();
+// Safe redirect: only allow same-origin paths (no protocol or host)
+function getRedirectTarget(redirect: string | null): string {
+  if (!redirect || typeof redirect !== 'string') return '/';
+  const path = redirect.startsWith('/') ? redirect : `/${redirect}`;
+  // Avoid open redirect: must start with / and not //
+  if (!path.startsWith('/') || path.startsWith('//')) return '/';
+  return path;
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
-  
+  const redirectTo = getRedirectTarget(searchParams.get('redirect'));
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,9 +28,9 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push('/');
+      window.location.href = redirectTo;
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,13 +38,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const result = await login(username, password);
-    
+
     if (result.success) {
-      router.push('/');
-    } else {
-      setError(result.error || 'Login failed');
-      setIsLoading(false);
+      // Full page redirect so middleware sees the cookie on the next request
+      window.location.href = redirectTo;
+      return;
     }
+    setError(result.error || 'Login failed');
+    setIsLoading(false);
   };
 
   // Show loading while checking auth
@@ -148,5 +159,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#faf8f6] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#800000] animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
