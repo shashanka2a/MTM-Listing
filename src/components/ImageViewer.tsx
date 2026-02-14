@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { ZoomIn, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { ZoomIn, Eye, EyeOff, RefreshCw, X, ZoomOut, RotateCcw } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ListingImage, AIAnalysis } from '../contexts/ListingContext';
+
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.25;
 
 export interface Detection {
   id: number;
@@ -29,78 +33,28 @@ const defaultImages = [
   { id: '3', url: 'https://images.unsplash.com/photo-1650472738255-b48e9e59e05a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2RlbCUyMHRyYWluJTIwYm94JTIwcGFja2FnaW5nfGVufDF8fHx8MTc2ODQwMDcyOHww&ixlib=rb-4.1.0&q=80&w=1080', label: 'Box' },
 ];
 
-// Generate detections from AI analysis
+// Spread defect markers across the image so each issue has its own spot and the popup sits above it
+const DEFECT_POSITIONS: { x: number; y: number }[] = [
+  { x: 22, y: 28 }, { x: 52, y: 22 }, { x: 78, y: 32 },
+  { x: 18, y: 52 }, { x: 50, y: 48 }, { x: 82, y: 55 },
+  { x: 28, y: 72 }, { x: 58, y: 68 }, { x: 75, y: 78 },
+];
+
+// Generate detections from AI analysis — issues (defects) only; each marker has popup on top
 function generateDetectionsFromAI(analysis: AIAnalysis | null | undefined): Detection[] {
-  if (!analysis) return [];
-  
-  const detections: Detection[] = [];
-  let id = 1;
-  
-  // Add road number if detected
-  if (analysis.roadNumber) {
-    detections.push({
-      id: id++,
-      type: 'feature',
-      label: `Road #: ${analysis.roadNumber}`,
-      x: 30 + Math.random() * 20,
-      y: 35 + Math.random() * 15,
-      severity: 'info',
-    });
-  }
-  
-  // Add road name/logo if detected
-  if (analysis.roadName) {
-    detections.push({
-      id: id++,
-      type: 'feature',
-      label: `${analysis.roadName} Logo`,
-      x: 20 + Math.random() * 15,
-      y: 30 + Math.random() * 10,
-      severity: 'info',
-    });
-  }
-  
-  // Add features
-  if (analysis.features && analysis.features.length > 0) {
-    analysis.features.slice(0, 2).forEach((feature, index) => {
-      detections.push({
-        id: id++,
-        type: 'feature',
-        label: feature,
-        x: 50 + index * 15,
-        y: 45 + index * 10,
-        severity: 'info',
-      });
-    });
-  }
-  
-  // Add defects
-  if (analysis.defects && analysis.defects.length > 0) {
-    analysis.defects.forEach((defect, index) => {
-      detections.push({
-        id: id++,
-        type: 'defect',
-        label: defect,
-        x: 60 + index * 10,
-        y: 60 + index * 8,
-        severity: index === 0 ? 'medium' : 'low',
-      });
-    });
-  }
-  
-  // Add condition note if available
-  if (analysis.conditionNotes) {
-    detections.push({
-      id: id++,
-      type: 'condition',
-      label: analysis.conditionNotes.slice(0, 30) + (analysis.conditionNotes.length > 30 ? '...' : ''),
-      x: 70,
-      y: 20,
-      severity: analysis.condition && analysis.condition < 5 ? 'high' : 'low',
-    });
-  }
-  
-  return detections;
+  if (!analysis?.defects?.length) return [];
+
+  return analysis.defects.map((defect, index) => {
+    const pos = DEFECT_POSITIONS[index % DEFECT_POSITIONS.length];
+    return {
+      id: index + 1,
+      type: 'defect' as const,
+      label: defect,
+      x: pos.x,
+      y: pos.y,
+      severity: (index === 0 ? 'medium' : 'low') as 'low' | 'medium' | 'high' | 'info',
+    };
+  });
 }
 
 export function ImageViewer({ showDetections, onToggleDetections, images: propImages, aiAnalysis, onRerunAnalysis }: ImageViewerProps) {
@@ -115,16 +69,66 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
   
   const [selectedImage, setSelectedImage] = useState(displayImages[0]);
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const zoomContainerRef = useRef<HTMLDivElement>(null);
+
   // Generate detections from AI analysis
   const detections = useMemo(() => generateDetectionsFromAI(aiAnalysis), [aiAnalysis]);
-  
+
   // Update selected image when images change
   React.useEffect(() => {
     if (displayImages.length > 0) {
       setSelectedImage(displayImages[0]);
     }
   }, [propImages]);
+
+  const openZoom = useCallback(() => {
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+    setZoomOpen(true);
+  }, []);
+
+  const closeZoom = useCallback(() => {
+    setZoomOpen(false);
+  }, []);
+
+  const zoomIn = useCallback(() => {
+    setZoomLevel((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoomLevel((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP));
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    if (e.deltaY < 0) zoomIn();
+    else zoomOut();
+  }, [zoomIn, zoomOut]);
+
+  React.useEffect(() => {
+    if (!zoomOpen || !zoomContainerRef.current) return;
+    const el = zoomContainerRef.current;
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [zoomOpen, handleWheel]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!zoomOpen) return;
+    if (e.key === 'Escape') closeZoom();
+  }, [zoomOpen, closeZoom]);
+
+  React.useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -145,9 +149,12 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
             className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
             {showDetections ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="hidden sm:inline">{showDetections ? 'Hide' : 'Show'}</span> Detections
+            <span className="hidden sm:inline">{showDetections ? 'Hide' : 'Show'}</span> Issues
           </button>
-          <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+          <button
+            onClick={openZoom}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          >
             <ZoomIn className="w-4 h-4" />
             <span className="hidden sm:inline">Zoom</span>
           </button>
@@ -171,28 +178,29 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
           onLoad={handleImageLoad}
         />
         
-        {/* AI Detection Overlays - Only show after image loads */}
+        {/* AI Detection Overlays — issues only; popup on top of each marker */}
         {showDetections && imageLoaded && detections.map((detection) => (
           <div
             key={detection.id}
-            className="absolute"
-            style={{ left: `${detection.x}%`, top: `${detection.y}%` }}
+            className="absolute flex flex-col items-center"
+            style={{ left: `${detection.x}%`, top: `${detection.y}%`, transform: 'translate(-50%, 0)' }}
           >
-            <div className={`relative w-3 h-3 rounded-full ${
-              detection.severity === 'low' ? 'bg-yellow-400' :
-              detection.severity === 'medium' ? 'bg-orange-400' :
-              'bg-blue-400'
-            } animate-pulse`}>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <div className={`px-2 py-1 rounded text-xs font-medium ${
-                  detection.severity === 'low' ? 'bg-yellow-100 text-yellow-900' :
-                  detection.severity === 'medium' ? 'bg-orange-100 text-orange-900' :
-                  'bg-blue-100 text-blue-900'
-                }`}>
-                  {detection.label}
-                </div>
+            {/* Popup directly above the marker */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap z-10">
+              <div className={`px-2 py-1 rounded text-xs font-medium shadow-sm ${
+                detection.severity === 'low' ? 'bg-amber-100 text-amber-900 border border-amber-200' :
+                detection.severity === 'medium' ? 'bg-orange-100 text-orange-900 border border-orange-200' :
+                'bg-red-100 text-red-900 border border-red-200'
+              }`}>
+                {detection.label}
               </div>
             </div>
+            {/* Marker dot under the popup */}
+            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+              detection.severity === 'low' ? 'bg-amber-500' :
+              detection.severity === 'medium' ? 'bg-orange-500' :
+              'bg-red-500'
+            } animate-pulse ring-2 ring-white shadow`} />
           </div>
         ))}
       </div>
@@ -220,6 +228,70 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
           </button>
         ))}
       </div>
+
+      {/* Zoom lightbox */}
+      {zoomOpen && (
+        <div
+          ref={zoomContainerRef}
+          className="fixed inset-0 z-50 flex flex-col bg-black/90"
+          style={{ touchAction: 'none' }}
+        >
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3 bg-gradient-to-b from-black/60 to-transparent z-10">
+            <span className="text-white text-sm font-medium truncate mr-4">{selectedImage.label}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={zoomOut}
+                disabled={zoomLevel <= MIN_ZOOM}
+                className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Zoom out"
+              >
+                <ZoomOut className="w-5 h-5" />
+              </button>
+              <span className="text-white text-sm tabular-nums min-w-[3rem] text-center">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                onClick={zoomIn}
+                disabled={zoomLevel >= MAX_ZOOM}
+                className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Zoom in"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
+              <button
+                onClick={resetZoom}
+                className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                title="Reset zoom"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </button>
+              <button
+                onClick={closeZoom}
+                className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center overflow-auto min-h-0 p-4">
+            <div
+              className="flex-shrink-0 transition-transform duration-150 origin-center"
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
+              }}
+            >
+              <ImageWithFallback
+                src={selectedImage.url}
+                alt={selectedImage.label}
+                className="max-w-none object-contain select-none"
+                style={{ maxHeight: 'calc(100vh - 6rem)' }}
+                draggable={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

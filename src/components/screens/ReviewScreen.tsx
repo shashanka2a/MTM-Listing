@@ -294,7 +294,7 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
     { key: 's', description: 'Save draft', action: handleSaveDraft },
     { key: 'a', description: 'Approve listing', action: () => handleApprove() },
     { key: 'r', description: 'Reject listing', action: handleReject },
-    { key: 'd', description: 'Toggle detections', action: () => setShowDetections(!showDetections) },
+    { key: 'd', description: 'Toggle issues overlay', action: () => setShowDetections(!showDetections) },
   ];
 
   return (
