@@ -79,10 +79,13 @@ export interface AIAnalysis {
   decoderBrand: string | null;
   condition: number | null;
   conditionNotes: string | null;
+  runningCondition: string | null;
+  lighting: string | null;
   packaging: string | null;
   paperwork: boolean | null;
   wheelWear: string | null;
   material: string | null;
+  paint: string | null;
   couplerType: string | null;
   features: string[];
   defects: string[];

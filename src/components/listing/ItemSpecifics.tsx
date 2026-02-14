@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface ItemSpecificsProps {
   data?: Record<string, any>;
@@ -17,8 +17,8 @@ interface SpecField {
 const specFields: SpecField[] = [
   { key: 'brand', label: 'Brand', required: true },
   { key: 'line', label: 'Line', required: false },
-  { key: 'scale', label: 'Scale', required: true },
-  { key: 'gauge', label: 'Gauge', required: true },
+  { key: 'scale', label: 'Scale', required: true }, // ratio e.g. 1:48, 1:87
+  { key: 'gauge', label: 'Gauge', required: true, options: ['Z', 'N', 'HO', 'S', 'O', 'G'] },
   { key: 'roadName', label: 'Road Name', required: true },
   { key: 'roadNumber', label: 'Road Number', required: false },
   { key: 'locomotiveType', label: 'Locomotive Type', required: true },
@@ -28,11 +28,11 @@ const specFields: SpecField[] = [
   { key: 'couplerType', label: 'Coupler Type', required: false },
   { key: 'lighting', label: 'Lighting', required: false },
   { key: 'material', label: 'Material', required: false },
-  { key: 'paint', label: 'Paint', required: false },
+  { key: 'paint', label: 'Paint', required: false, options: ['Custom', 'Factory', 'Undecorated'] },
   { key: 'packaging', label: 'Packaging', required: true },
   { key: 'paperwork', label: 'Paperwork', required: false, options: ['Included', 'Not Included'] },
   { key: 'wheelWear', label: 'Wheel Wear', required: false, options: ['Very little', 'Minor', 'Moderate', 'Heavy'] },
-  { key: 'runningCondition', label: 'Running Condition', required: true },
+  { key: 'runningCondition', label: 'Running Condition', required: false },
   { key: 'dccStatus', label: 'DCC Status', required: false },
 ];
 
@@ -48,17 +48,9 @@ export function ItemSpecifics({ data = {}, onChange, isAiGenerated }: ItemSpecif
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <label className="block text-sm font-semibold text-gray-900">
-            Item Specifics
-          </label>
-          {isAiGenerated && filledFields.length > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-              <Sparkles className="w-3 h-3" />
-              {filledFields.length} AI detected
-            </span>
-          )}
-        </div>
+        <label className="block text-sm font-semibold text-gray-900">
+          Item Specifics
+        </label>
         <div className="text-xs text-gray-600">
           <span className="text-red-600 font-medium">*</span> Required
         </div>
@@ -71,14 +63,16 @@ export function ItemSpecifics({ data = {}, onChange, isAiGenerated }: ItemSpecif
           
           const placeholder = spec.key === 'roadNumber'
             ? 'Number only (e.g. 1574), not the reporting mark (BN, UP, etc.)'
+            : spec.key === 'scale'
+            ? 'Scale ratio (e.g. 1:48, 1:87, 1:160)'
+            : spec.key === 'gauge'
+            ? 'Gauge letter (e.g. Z, N, HO, O, G)'
             : spec.options
             ? `Select ${spec.label.toLowerCase()}...`
             : `Enter ${spec.label.toLowerCase()}...`;
           const inputClass = `w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-md focus:ring-2 focus:ring-[#8b4513] focus:border-transparent ${
             spec.required && !hasValue
               ? 'border-red-300 bg-red-50'
-              : hasValue && isAiGenerated
-              ? 'border-purple-200 bg-purple-50'
               : 'border-gray-300'
           }`;
           return (

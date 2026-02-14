@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Wand2, Sparkles } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 
 interface TemplatePart {
   key: string;
@@ -24,7 +24,7 @@ const defaultTemplateParts: TemplatePart[] = [
   { key: 'features', label: 'Features', value: '' },
 ];
 
-export function TitleGenerator({ title, onTitleChange, templateParts, onRegenerate, isAiGenerated }: TitleGeneratorProps) {
+export function TitleGenerator({ title, onTitleChange, templateParts, onRegenerate }: TitleGeneratorProps) {
   // Filter out empty template parts
   const displayParts = useMemo(() => {
     const parts = templateParts || defaultTemplateParts;
@@ -33,17 +33,9 @@ export function TitleGenerator({ title, onTitleChange, templateParts, onRegenera
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <label className="block text-sm font-semibold text-gray-900">
-            Title Generator
-          </label>
-          {isAiGenerated && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-              <Sparkles className="w-3 h-3" />
-              AI Generated
-            </span>
-          )}
-        </div>
+        <label className="block text-sm font-semibold text-gray-900">
+          Title Generator
+        </label>
         <button 
           onClick={onRegenerate}
           disabled={!onRegenerate}

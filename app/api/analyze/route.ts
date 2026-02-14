@@ -17,7 +17,18 @@ SCALE IDENTIFICATION (use size, track, and visual cues — do not guess):
 
 If track is visible: three rails → O. Two rails very narrow → Z or N. Two rails medium → HO or S. Two rails wide → O or G. Use relative size of the model (vs box, hands, or known objects) to choose scale when gauge is unclear.
 
-Examine ALL images thoroughly: model (logos, numbers, wheels), boxes (brand, model#, scale), packaging, and any paperwork (manuals, instructions, certificates, warranty cards, decoder docs, etc.). Look at every photo for paperwork — if any image shows paperwork, set paperwork to true.
+Examine ALL images thoroughly: the physical model (logos, numbers, wheels), BOX DESCRIPTIONS and packaging text (model name, manufacturer, part number, scale printed on box), TEST SLIPS / inspection slips, and any other paperwork.
+
+TEST SLIPS & INSPECTION FORMS: Look for documents titled "RUNNING CONDITION", inspection slips, or similar forms with checkboxes. From these extract and use:
+- RUNNING CONDITION: Use the checked option — e.g. "Runs Well", "Runs Well On DCC Only", "Runs Well On DCC & DC", "Runs But Has Bad Gears", "Motor Works, Doesn't Run", "Doesn't Run". Populate runningCondition with this exact text when visible.
+- LIGHTS: Note which are checked (Headlight, Directional, Number Boards, etc.) and put in lighting field as comma-separated list.
+- DCC: Use the checked option (e.g. "DC Only / Not DCC Ready", "DCC Ready (Decoder Not Incl.)", "DC/DCC Dual Mode") to set dcc.
+- SOUND: If "Tested & Works" or "Installed, But Does Not Work" is checked, note in conditionNotes or features.
+- PART NUMBER, MTM#, Insp. By, Date, Notes: Use PART NUMBER or model number from the slip for modelNumber when visible; include inspector notes in conditionNotes when present.
+
+BOX DESCRIPTIONS & PACKAGING: Read text on boxes, end flaps, and product sheets. Extract: manufacturer (e.g. Atlas), model name (e.g. EMD GP-7 Phase 1 Diesel Loco), product/series number, part numbers, scale if printed. Use this to populate brand, locomotiveType, modelNumber, scale/gauge when clearly stated. Prefer box text over guessing from the model when both are visible.
+
+Look at every photo for paperwork — if any image shows paperwork (including test slips), set paperwork to true.
 
 WHEEL WEAR: Look at the wheels in the images. Assess wear from color (darkening, rust), dirt, and corrosion. Return exactly one of: "Very little", "Minor", "Moderate", "Heavy". Very little = like new; Minor = light discoloration or dust; Moderate = visible wear/dirt/corrosion; Heavy = significant wear, heavy corrosion, or heavy dirt.
 
@@ -29,20 +40,23 @@ Return ONLY a valid JSON object (no markdown, no explanation) with these exact f
   "title": "Complete eBay title: [Scale] [Brand] [Product Line] [Road Name] [Type] #[Road Number] [Key Features]",
   "brand": "Exact manufacturer name (Athearn, Bachmann, Kato, Atlas, MTH, Lionel, Broadway Limited, ScaleTrains, Walthers, Proto 2000, American Flyer, etc.)",
   "line": "Product line if visible (Genesis, Executive, Trainman, Spectrum, etc.)",
-  "scale": "Exactly one of: Z, N, HO, S, O, G — use the identification guide above",
-  "gauge": "Track gauge in mm if known: 6.5 (Z), 9 (N), 16.5 (HO), 22.5 (S), 32 (O), 45 (G); else same as scale name",
+  "scale": "Scale RATIO only — exactly one of: 1:220, 1:160, 1:87, 1:64, 1:48, 1:22.5 (for Z, N, HO, S, O, G respectively). Use the identification guide to identify the scale, then output the ratio here.",
+  "gauge": "Gauge LETTER only — exactly one of: Z, N, HO, S, O, G. Use the identification guide above.",
   "locomotiveType": "Specific type: Diesel Locomotive, Steam Locomotive, Electric Locomotive, Boxcar, Tank Car, Hopper, Gondola, Flat Car, Caboose, Passenger Car, etc.",
   "roadName": "Full railroad name: Union Pacific, BNSF Railway, Norfolk Southern, CSX, Santa Fe, Pennsylvania Railroad, etc. (Reporting marks like BN, UP, BNSF are 2–4 letter codes on the model; use them to identify the railroad but put the full name here.)",
   "roadNumber": "ONLY the numeric part of the number on the equipment. Do NOT include the Reporting Mark (the 2–4 letter code). Example: if the model shows BN1574, roadNumber is \"1574\". Example: UP 1234 → roadNumber is \"1234\".",
-  "modelNumber": "Manufacturer's catalog/product number from box or item",
-  "dcc": "One of: DCC with Sound, DCC Equipped, DCC Ready, Analog Only, Unknown",
+  "modelNumber": "Manufacturer's catalog/product number from box, test slip (PART NUMBER), or item",
+  "runningCondition": "From test slip if visible: Runs Well, Runs Well On DCC Only, Runs Well On DCC & DC, Runs But Has Bad Gears, Motor Works Doesn't Run, Doesn't Run; else null",
+  "lighting": "From test slip LIGHTS if visible: comma-separated e.g. Headlight, Directional, Number Boards; else null",
+  "dcc": "One of: DCC with Sound, DCC Equipped, DCC Ready, DC Only / Not DCC Ready, DC/DCC Dual Mode, Analog Only, Unknown. Use test slip DCC section when visible.",
   "decoderBrand": "If DCC: decoder brand (ESU LokSound, Tsunami, Digitrax, etc.) or null",
   "condition": 8,
-  "conditionNotes": "Detailed condition description for seller notes (2-3 sentences)",
+  "conditionNotes": "Detailed condition description for seller notes; include any inspector Notes from test slip when present",
   "packaging": "One of: Original Box Mint, Original Box Good, Original Box Fair, Original Box Poor, No Original Box",
   "paperwork": true,
   "wheelWear": "Exactly one of: Very little, Minor, Moderate, Heavy — based on wheel appearance (color, dirt, corrosion) in the images",
   "material": "Primary material: Plastic, Die-cast Metal, Brass, or Mixed",
+  "paint": "Exactly one of: Custom, Factory, Undecorated. Factory = standard manufacturer finish (typical for production models); Custom = repainted or custom finish; Undecorated = unpainted/undecorated kit. Infer from images — most boxed production models are Factory.",
   "couplerType": "Coupler type if visible: Knuckle, Horn-Hook, Kadee, McHenry, or Unknown",
   "features": [
     "List each notable feature as a separate item",
@@ -58,7 +72,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with these exact f
 }
 
 RULES:
-1. Identify scale using the guide: size vs real-world reference, track gauge (2 vs 3 rails, width), and visual cues. Prefer scale printed on box if visible.
+1. Identify scale using the guide: size vs real-world reference, track gauge (2 vs 3 rails, width), and visual cues. Prefer scale printed on box if visible. Then: scale = ratio (1:220, 1:160, 1:87, 1:64, 1:48, 1:22.5); gauge = letter (Z, N, HO, S, O, G).
 2. For condition: 10=Mint/Sealed, 9=Like New, 8=Excellent, 7=Very Good, 6=Good, 5=Fair, 4-1=Poor to Junk
 3. Always provide the title in proper eBay format with correct scale
 4. features array: 3-6 specific items; defects can be [] if none
@@ -66,7 +80,10 @@ RULES:
 6. roadNumber = digits only. If you see \"BN1574\" or \"UP 1234\" on the model, roadNumber is \"1574\" or \"1234\" respectively.
 7. wheelWear: Inspect the WHEELS in the images. Use color (darkening, rust), dirt, and corrosion to choose Very little / Minor / Moderate / Heavy. Do not leave blank if wheels are visible.
 8. paperwork: Scan every image for any paperwork (manuals, instructions, certificates, docs). If any photo shows paperwork, set paperwork to true. Only false when no paperwork appears in any image.
-9. confidence: higher when scale/box is clearly visible, lower when scale is inferred from size only`;
+9. paint: Use Factory for standard manufacturer-painted models (most items); Custom if repainted/custom; Undecorated if unpainted kit.
+10. TEST SLIPS: Always read any inspection/running condition slips in the images and use them to set runningCondition, lighting, dcc, modelNumber (PART NUMBER), and conditionNotes. Do not ignore test slips.
+11. BOX TEXT: Always read box sides, end flaps, and product sheets for brand, model name, part number, scale. Prefer printed box text over inference when visible.
+12. confidence: higher when scale/box/test slip is clearly visible, lower when scale is inferred from size only`;
 
 export async function POST(request: NextRequest) {
   try {

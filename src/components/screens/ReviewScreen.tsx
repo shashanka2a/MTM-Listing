@@ -25,6 +25,24 @@ function normalizeRoadNumber(value: string | null | undefined): string {
   return withoutMark || trimmed;
 }
 
+const GAUGE_OPTIONS = ['Z', 'N', 'HO', 'S', 'O', 'G'] as const;
+/** Normalize gauge to dropdown value (e.g. "ho" → "HO") so AI value auto-selects. */
+function normalizeGauge(value: string | null | undefined): string {
+  if (value == null || typeof value !== 'string') return '';
+  const s = value.trim().toUpperCase();
+  if (s === 'HO') return 'HO';
+  if (GAUGE_OPTIONS.includes(s as typeof GAUGE_OPTIONS[number])) return s;
+  return value.trim() || '';
+}
+
+/** Normalize scale ratio (e.g. "1:87", "1 : 87") for consistent display. */
+function normalizeScale(value: string | null | undefined): string {
+  if (value == null || typeof value !== 'string') return '';
+  const s = value.trim().replace(/\s+/g, '');
+  if (/^1:\d+/.test(s)) return s;
+  return value.trim() || '';
+}
+
 export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScreenProps) {
   const toast = useToast();
   const { 
@@ -100,8 +118,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         title: lastAnalysis.title || '',
         brand: lastAnalysis.brand || '',
         line: (lastAnalysis as any).line || '',
-        scale: lastAnalysis.scale || '',
-        gauge: lastAnalysis.gauge || lastAnalysis.scale || '',
+        scale: normalizeScale(lastAnalysis.scale) || '',
+        gauge: normalizeGauge(lastAnalysis.gauge) || '',
         dcc: lastAnalysis.dcc || 'Unknown',
         decoderBrand: (lastAnalysis as any).decoderBrand || '',
         roadName: lastAnalysis.roadName || '',
@@ -110,10 +128,13 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         modelNumber: lastAnalysis.modelNumber || '',
         condition: lastAnalysis.condition || 7,
         conditionNotes: lastAnalysis.conditionNotes || '',
+        runningCondition: (lastAnalysis as AIAnalysis).runningCondition || '',
+        lighting: (lastAnalysis as AIAnalysis).lighting || '',
         packaging: lastAnalysis.packaging || '',
         paperwork: lastAnalysis.paperwork ? 'Included' : 'Not Included',
         wheelWear: (lastAnalysis as AIAnalysis).wheelWear || '',
         material: (lastAnalysis as any).material || '',
+        paint: (lastAnalysis as AIAnalysis).paint || '',
         couplerType: (lastAnalysis as any).couplerType || '',
         // Use AI-generated description if available
         description: (lastAnalysis as any).description || lastAnalysis.conditionNotes || '',
@@ -260,8 +281,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         title: analysis.title || listingData.title,
         brand: analysis.brand || listingData.brand,
         line: analysis.line || listingData.line,
-        scale: analysis.scale || listingData.scale,
-        gauge: analysis.gauge || analysis.scale || listingData.gauge,
+        scale: normalizeScale(analysis.scale) || listingData.scale,
+        gauge: normalizeGauge(analysis.gauge) || listingData.gauge,
         dcc: analysis.dcc || listingData.dcc,
         decoderBrand: analysis.decoderBrand || listingData.decoderBrand,
         roadName: analysis.roadName || listingData.roadName,
@@ -270,10 +291,13 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         modelNumber: analysis.modelNumber || listingData.modelNumber,
         condition: analysis.condition || listingData.condition,
         conditionNotes: analysis.conditionNotes || listingData.conditionNotes,
+        runningCondition: analysis.runningCondition || listingData.runningCondition,
+        lighting: analysis.lighting || listingData.lighting,
         packaging: analysis.packaging || listingData.packaging,
         paperwork: analysis.paperwork ? 'Included' : 'Not Included',
         wheelWear: analysis.wheelWear || listingData.wheelWear,
         material: analysis.material || listingData.material,
+        paint: analysis.paint || listingData.paint,
         couplerType: analysis.couplerType || listingData.couplerType,
         description: analysis.description || listingData.description,
         features: Array.isArray(analysis.features) ? [...analysis.features] : listingData.features || [],
