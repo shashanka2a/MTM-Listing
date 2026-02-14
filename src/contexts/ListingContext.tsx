@@ -50,6 +50,9 @@ export interface Listing {
   height?: string;
   // Description
   description?: string;
+  // Editable AI evidence (from images)
+  features?: string[];
+  defects?: string[];
   // Last AI analysis snapshot used to generate this listing
   aiAnalysis?: AIAnalysis | null;
   // Metadata

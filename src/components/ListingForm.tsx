@@ -69,8 +69,10 @@ export function ListingForm({ data, onChange, aiAnalysis, onRegenerate }: Listin
               onConditionChange={(condition) => updateData('condition', condition)}
               conditionNotes={formData.conditionNotes}
               onConditionNotesChange={(notes) => updateData('conditionNotes', notes)}
-              features={aiAnalysis?.features}
-              defects={aiAnalysis?.defects}
+              features={Array.isArray(formData.features) ? formData.features : aiAnalysis?.features ?? []}
+              defects={Array.isArray(formData.defects) ? formData.defects : aiAnalysis?.defects ?? []}
+              onFeaturesChange={(features) => updateData('features', features)}
+              onDefectsChange={(defects) => updateData('defects', defects)}
               isAiGenerated={!!aiAnalysis?.condition}
             />
           </div>

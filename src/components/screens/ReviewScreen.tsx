@@ -32,7 +32,7 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
   } = useListings();
   
   const [status, setStatus] = useState<'processing' | 'review' | 'approved' | 'pending'>('processing');
-  const [showDetections, setShowDetections] = useState(true);
+  const [showDetections, setShowDetections] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -70,6 +70,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
     height: '',
     conditionNotes: '',
     description: '',
+    features: [] as string[],
+    defects: [] as string[],
   }));
   const [originalData, setOriginalData] = useState(listingData);
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
@@ -106,6 +108,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         couplerType: (lastAnalysis as any).couplerType || '',
         // Use AI-generated description if available
         description: (lastAnalysis as any).description || lastAnalysis.conditionNotes || '',
+        features: Array.isArray(lastAnalysis.features) ? [...lastAnalysis.features] : [],
+        defects: Array.isArray(lastAnalysis.defects) ? [...lastAnalysis.defects] : [],
       };
 
       setListingData(prev => ({
@@ -198,6 +202,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         width: dataToApprove.width,
         height: dataToApprove.height,
         description: dataToApprove.description,
+        features: dataToApprove.features,
+        defects: dataToApprove.defects,
         aiAnalysis: lastAnalysis,
         confidence: 87,
         approvedAt: new Date().toISOString(),
@@ -260,6 +266,8 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         material: analysis.material || listingData.material,
         couplerType: analysis.couplerType || listingData.couplerType,
         description: analysis.description || listingData.description,
+        features: Array.isArray(analysis.features) ? [...analysis.features] : listingData.features || [],
+        defects: Array.isArray(analysis.defects) ? [...analysis.defects] : listingData.defects || [],
       };
       
       setListingData(newData);
