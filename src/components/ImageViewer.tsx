@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { ZoomIn, Eye, EyeOff, RefreshCw, X, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, Eye, EyeOff, RefreshCw, X, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ListingImage, AIAnalysis } from '../contexts/ListingContext';
 
@@ -123,7 +123,9 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!zoomOpen) return;
     if (e.key === 'Escape') closeZoom();
-  }, [zoomOpen, closeZoom]);
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+  }, [zoomOpen, closeZoom, goPrev, goNext]);
 
   React.useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -137,6 +139,31 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
   const handleImageChange = (image: typeof displayImages[0]) => {
     setSelectedImage(image);
     setImageLoaded(false); // Reset when image changes
+  };
+
+  const currentIndex = displayImages.findIndex((img) => img.id === selectedImage.id);
+  const canGoPrev = displayImages.length > 1;
+  const canGoNext = displayImages.length > 1;
+  const goPrev = useCallback(() => {
+    if (!canGoPrev) return;
+    const prevIndex = currentIndex <= 0 ? displayImages.length - 1 : currentIndex - 1;
+    setSelectedImage(displayImages[prevIndex]);
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+  }, [canGoPrev, currentIndex, displayImages]);
+  const goNext = useCallback(() => {
+    if (!canGoNext) return;
+    const nextIndex = currentIndex >= displayImages.length - 1 ? 0 : currentIndex + 1;
+    setSelectedImage(displayImages[nextIndex]);
+    setZoomLevel(1);
+    setPan({ x: 0, y: 0 });
+  }, [canGoNext, currentIndex, displayImages]);
+
+  const handleMainImageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openZoom();
+    }
   };
 
   return (
@@ -169,8 +196,14 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
         </div>
       </div>
 
-      {/* Main Image Viewer */}
-      <div className="relative bg-gray-50 rounded-lg mb-4 aspect-[16/10] sm:aspect-[4/3] overflow-hidden">
+      {/* Main Image Viewer — click to open zoom */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openZoom}
+        onKeyDown={handleMainImageKeyDown}
+        className="relative bg-gray-50 rounded-lg mb-4 aspect-[16/10] sm:aspect-[4/3] overflow-hidden cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#8b4513] focus:ring-inset"
+      >
         <ImageWithFallback
           src={selectedImage.url}
           alt={selectedImage.label}
@@ -274,7 +307,30 @@ export function ImageViewer({ showDetections, onToggleDetections, images: propIm
               </button>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center overflow-auto min-h-0 p-4">
+          <div className="flex-1 flex items-center justify-center overflow-auto min-h-0 p-4 relative">
+            {/* Left / Right navigation when multiple photos */}
+            {canGoPrev && (
+              <button
+                type="button"
+                onClick={goPrev}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                title="Previous photo"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+            )}
+            {canGoNext && (
+              <button
+                type="button"
+                onClick={goNext}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                title="Next photo"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            )}
             <div
               className="flex-shrink-0 transition-transform duration-150 origin-center"
               style={{
