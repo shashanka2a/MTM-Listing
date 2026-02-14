@@ -17,6 +17,14 @@ interface ReviewScreenProps {
   onUnsavedChange?: (hasChanges: boolean) => void;
 }
 
+/** Road number = number only; strip 2–4 letter reporting mark (e.g. BN1574 → 1574). */
+function normalizeRoadNumber(value: string | null | undefined): string {
+  if (value == null || typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  const withoutMark = trimmed.replace(/^[A-Za-z]{2,4}\s*/i, '').trim();
+  return withoutMark || trimmed;
+}
+
 export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScreenProps) {
   const toast = useToast();
   const { 
@@ -97,13 +105,14 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         dcc: lastAnalysis.dcc || 'Unknown',
         decoderBrand: (lastAnalysis as any).decoderBrand || '',
         roadName: lastAnalysis.roadName || '',
-        roadNumber: lastAnalysis.roadNumber || '',
+        roadNumber: normalizeRoadNumber(lastAnalysis.roadNumber) || '',
         locomotiveType: lastAnalysis.locomotiveType || '',
         modelNumber: lastAnalysis.modelNumber || '',
         condition: lastAnalysis.condition || 7,
         conditionNotes: lastAnalysis.conditionNotes || '',
         packaging: lastAnalysis.packaging || '',
         paperwork: lastAnalysis.paperwork ? 'Included' : 'Not Included',
+        wheelWear: (lastAnalysis as AIAnalysis).wheelWear || '',
         material: (lastAnalysis as any).material || '',
         couplerType: (lastAnalysis as any).couplerType || '',
         // Use AI-generated description if available
@@ -256,13 +265,14 @@ export function ReviewScreen({ onApprove, onBack, onUnsavedChange }: ReviewScree
         dcc: analysis.dcc || listingData.dcc,
         decoderBrand: analysis.decoderBrand || listingData.decoderBrand,
         roadName: analysis.roadName || listingData.roadName,
-        roadNumber: analysis.roadNumber || listingData.roadNumber,
+        roadNumber: normalizeRoadNumber(analysis.roadNumber) || listingData.roadNumber,
         locomotiveType: analysis.locomotiveType || listingData.locomotiveType,
         modelNumber: analysis.modelNumber || listingData.modelNumber,
         condition: analysis.condition || listingData.condition,
         conditionNotes: analysis.conditionNotes || listingData.conditionNotes,
         packaging: analysis.packaging || listingData.packaging,
         paperwork: analysis.paperwork ? 'Included' : 'Not Included',
+        wheelWear: analysis.wheelWear || listingData.wheelWear,
         material: analysis.material || listingData.material,
         couplerType: analysis.couplerType || listingData.couplerType,
         description: analysis.description || listingData.description,

@@ -81,6 +81,7 @@ export interface AIAnalysis {
   conditionNotes: string | null;
   packaging: string | null;
   paperwork: boolean | null;
+  wheelWear: string | null;
   material: string | null;
   couplerType: string | null;
   features: string[];

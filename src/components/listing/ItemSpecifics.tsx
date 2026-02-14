@@ -11,6 +11,7 @@ interface SpecField {
   key: string;
   label: string;
   required: boolean;
+  options?: string[];
 }
 
 const specFields: SpecField[] = [
@@ -29,8 +30,8 @@ const specFields: SpecField[] = [
   { key: 'material', label: 'Material', required: false },
   { key: 'paint', label: 'Paint', required: false },
   { key: 'packaging', label: 'Packaging', required: true },
-  { key: 'paperwork', label: 'Paperwork', required: false },
-  { key: 'wheelWear', label: 'Wheel Wear', required: false },
+  { key: 'paperwork', label: 'Paperwork', required: false, options: ['Included', 'Not Included'] },
+  { key: 'wheelWear', label: 'Wheel Wear', required: false, options: ['Very little', 'Minor', 'Moderate', 'Heavy'] },
   { key: 'runningCondition', label: 'Running Condition', required: true },
   { key: 'dccStatus', label: 'DCC Status', required: false },
 ];
@@ -68,25 +69,44 @@ export function ItemSpecifics({ data = {}, onChange, isAiGenerated }: ItemSpecif
           const value = data[spec.key] || '';
           const hasValue = value && value.trim() !== '';
           
+          const placeholder = spec.key === 'roadNumber'
+            ? 'Number only (e.g. 1574), not the reporting mark (BN, UP, etc.)'
+            : spec.options
+            ? `Select ${spec.label.toLowerCase()}...`
+            : `Enter ${spec.label.toLowerCase()}...`;
+          const inputClass = `w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-md focus:ring-2 focus:ring-[#8b4513] focus:border-transparent ${
+            spec.required && !hasValue
+              ? 'border-red-300 bg-red-50'
+              : hasValue && isAiGenerated
+              ? 'border-purple-200 bg-purple-50'
+              : 'border-gray-300'
+          }`;
           return (
             <div key={spec.key}>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 {spec.label}
                 {spec.required && <span className="text-red-600 ml-1">*</span>}
               </label>
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => onChange?.(spec.key, e.target.value)}
-                placeholder={`Enter ${spec.label.toLowerCase()}...`}
-                className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-md focus:ring-2 focus:ring-[#8b4513] focus:border-transparent ${
-                  spec.required && !hasValue
-                    ? 'border-red-300 bg-red-50'
-                    : hasValue && isAiGenerated
-                    ? 'border-purple-200 bg-purple-50'
-                    : 'border-gray-300'
-                }`}
-              />
+              {spec.options ? (
+                <select
+                  value={value}
+                  onChange={(e) => onChange?.(spec.key, e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">{placeholder}</option>
+                  {spec.options.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => onChange?.(spec.key, e.target.value)}
+                  placeholder={placeholder}
+                  className={inputClass}
+                />
+              )}
             </div>
           );
         })}
