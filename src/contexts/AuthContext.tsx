@@ -33,8 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = () => {
       try {
         const storedUser = localStorage.getItem('mtm-user');
-        if (storedUser) {
+        const hasAuthCookie = document.cookie.includes('mtm-auth=true');
+        
+        if (storedUser && hasAuthCookie) {
           setUser(JSON.parse(storedUser));
+        } else if (storedUser && !hasAuthCookie) {
+          // Clear stale localStorage if cookie has expired to prevent login loops
+          localStorage.removeItem('mtm-user');
+          setUser(null);
         }
       } catch (error) {
         console.error('Error checking auth:', error);
